@@ -8,7 +8,7 @@ import { Container, Title, Subtitle, Button, Alert, FadeIn } from './ui'
 import { useSessionStore } from '@/store/useSession'
 import { ARCHETYPES } from '@/engine/archetypes'
 import { DISCLAIMERS } from '@/engine/questions'
-import type { RoundAnalysis, Archetype, PersonAnalysis, Insight } from '@/types'
+import type { Archetype, PersonAnalysis, Insight } from '@/types'
 
 export function Analysis() {
   const { context, getLatestAnalysis, startNewRound, completeSession } = useSessionStore()
