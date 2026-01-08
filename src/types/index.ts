@@ -189,6 +189,7 @@ export interface SessionState {
   evolutions: Evolution[]
   isProcessing: boolean
   error: string | null
+  _timeoutId?: number
 }
 
 export interface SessionActions {
@@ -198,6 +199,7 @@ export interface SessionActions {
   continueAsPersonB: () => void
   savePersonResponses: (responses: Omit<PersonResponses, 'timestamp'>) => void
   processAnalysis: () => void
+  cancelAnalysis: () => void
   startNewRound: () => void
   continueReflection: () => void
   completeSession: () => void

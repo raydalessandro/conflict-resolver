@@ -23,7 +23,8 @@ const INITIAL_STATE = {
   analyses: [],
   evolutions: [],
   isProcessing: false,
-  error: null as string | null
+  error: null as string | null,
+  _timeoutId: undefined as number | undefined
 }
 
 export const useSessionStore = create<SessionStore>()(
@@ -55,15 +56,34 @@ export const useSessionStore = create<SessionStore>()(
       },
 
       savePersonResponses: (responses) => {
-        const { currentPerson, currentRound, rounds } = get()
-        
+        const state = get()
+
+        // Input validation
+        if (!responses || typeof responses !== 'object') {
+          set({ error: 'Dati non validi' })
+          return
+        }
+
+        if (!responses.situation || !responses.feeling || !responses.need) {
+          set({ error: 'Campi obbligatori mancanti (situation, feeling, need)' })
+          return
+        }
+
+        // Race condition protection
+        if (state.isProcessing) {
+          console.warn('Already processing, skipping save')
+          return
+        }
+
+        const { currentPerson, currentRound, rounds } = state
+
         const fullResponses: PersonResponses = {
           ...responses,
           timestamp: Date.now()
         }
-        
+
         let roundData = rounds.find(r => r.number === currentRound)
-        
+
         if (!roundData) {
           roundData = {
             number: currentRound,
@@ -81,10 +101,12 @@ export const useSessionStore = create<SessionStore>()(
           roundData.personB = fullResponses
         }
 
-        const updatedRounds = rounds.filter(r => r.number !== currentRound)
-        updatedRounds.push(roundData)
+        // More efficient update using map
+        const updatedRounds = rounds.some(r => r.number === currentRound)
+          ? rounds.map(r => r.number === currentRound ? roundData : r)
+          : [...rounds, roundData]
 
-        set({ rounds: updatedRounds })
+        set({ rounds: updatedRounds, error: null })
 
         if (roundData.personA && roundData.personB) {
           get().processAnalysis()
@@ -94,10 +116,16 @@ export const useSessionStore = create<SessionStore>()(
       },
 
       processAnalysis: () => {
-        set({ isProcessing: true, status: 'processing', error: null })
+        // Clean up any existing timeout
+        const { _timeoutId } = get()
+        if (_timeoutId) {
+          clearTimeout(_timeoutId)
+        }
+
+        set({ isProcessing: true, status: 'processing', error: null, _timeoutId: undefined })
 
         // Piccolo delay per UX
-        setTimeout(() => {
+        const timeoutId = setTimeout(() => {
           try {
             const { currentRound, rounds, analyses } = get()
             const roundData = rounds.find(r => r.number === currentRound)
@@ -122,25 +150,38 @@ export const useSessionStore = create<SessionStore>()(
             }
 
             const updatedAnalyses = [...analyses, analysis]
-            const updatedEvolutions = evolution 
-              ? [...get().evolutions, evolution] 
+            const updatedEvolutions = evolution
+              ? [...get().evolutions, evolution]
               : get().evolutions
 
             set({
               analyses: updatedAnalyses,
               evolutions: updatedEvolutions,
               isProcessing: false,
-              status: 'analysis'
+              status: 'analysis',
+              _timeoutId: undefined
             })
 
           } catch (error) {
             console.error('Analysis error:', error)
-            set({ 
-              isProcessing: false, 
-              error: error instanceof Error ? error.message : 'Errore'
+            set({
+              isProcessing: false,
+              error: error instanceof Error ? error.message : 'Errore',
+              _timeoutId: undefined
             })
           }
         }, 1500)
+
+        // Store timeout ID for cleanup
+        set({ _timeoutId: timeoutId })
+      },
+
+      cancelAnalysis: () => {
+        const { _timeoutId } = get()
+        if (_timeoutId) {
+          clearTimeout(_timeoutId)
+          set({ isProcessing: false, _timeoutId: undefined })
+        }
       },
 
       startNewRound: () => {

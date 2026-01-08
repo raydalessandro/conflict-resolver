@@ -207,11 +207,11 @@ export function generateRoundAnalysis(
     archetypeData: archetypeA,
     confidence: archA.confidence,
     interpretation: {
-      whatTheySee: translationA?.translations.operatingMode.trim().slice(0, 250) + '...'
+      whatTheySee: (translationA?.translations?.operatingMode?.trim().slice(0, 250) + '...')
         || `Sta vivendo questa situazione dal bisogno di ${archetypeA.coreNeed.toLowerCase()}.`,
-      whatTheyFear: translationA?.translations.coreNeed.trim().slice(0, 150)
+      whatTheyFear: translationA?.translations?.coreNeed?.trim().slice(0, 150)
         || `La paura sottostante è ${archetypeA.coreFear.toLowerCase()}.`,
-      howTheyAct: translationA?.translations.underStress.trim().slice(0, 200)
+      howTheyAct: translationA?.translations?.underStress?.trim().slice(0, 200)
         || archetypeA.inConflict.behavior,
       whatTheyNeed: archetypeA.inConflict.needs
     }
@@ -223,11 +223,11 @@ export function generateRoundAnalysis(
     archetypeData: archetypeB,
     confidence: archB.confidence,
     interpretation: {
-      whatTheySee: translationB?.translations.operatingMode.trim().slice(0, 250) + '...'
+      whatTheySee: (translationB?.translations?.operatingMode?.trim().slice(0, 250) + '...')
         || `Sta vivendo questa situazione dal bisogno di ${archetypeB.coreNeed.toLowerCase()}.`,
-      whatTheyFear: translationB?.translations.coreNeed.trim().slice(0, 150)
+      whatTheyFear: translationB?.translations?.coreNeed?.trim().slice(0, 150)
         || `La paura sottostante è ${archetypeB.coreFear.toLowerCase()}.`,
-      howTheyAct: translationB?.translations.underStress.trim().slice(0, 200)
+      howTheyAct: translationB?.translations?.underStress?.trim().slice(0, 200)
         || archetypeB.inConflict.behavior,
       whatTheyNeed: archetypeB.inConflict.needs
     }
@@ -313,14 +313,14 @@ function calculateTension(
   })
   
   const intenseWords = ['mai', 'sempre', 'odio', 'impossibile', 'non sopporto', 'basta']
-  const allText = `${personA.situation} ${personA.feeling} ${personB.situation} ${personB.feeling}`.toLowerCase()
-  
+  const allText = `${personA.situation || ''} ${personA.feeling || ''} ${personB.situation || ''} ${personB.feeling || ''}`.toLowerCase()
+
   intenseWords.forEach(word => {
     if (allText.includes(word)) {
       tension += 0.05
     }
   })
-  
+
   return Math.min(1, Math.max(0, tension))
 }
 
@@ -383,9 +383,9 @@ export function analyzeEvolution(
   }
   
   const openingWords = ['capisco', 'forse', 'hai ragione', 'non avevo pensato', 'scusa']
-  const aText = (currentRound.personA.addition || '').toLowerCase()
-  const bText = (currentRound.personB.addition || '').toLowerCase()
-  
+  const aText = (currentRound.personA?.addition || '').toLowerCase()
+  const bText = (currentRound.personB?.addition || '').toLowerCase()
+
   openingWords.forEach(word => {
     if (aText.includes(word)) {
       evolution.openings.push({ person: 'A', word })
@@ -396,6 +396,6 @@ export function analyzeEvolution(
       evolution.tensionChange -= 0.1
     }
   })
-  
+
   return evolution
 }

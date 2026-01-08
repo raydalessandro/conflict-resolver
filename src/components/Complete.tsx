@@ -23,14 +23,19 @@ export function Complete() {
     evolutions.some(e => e.tensionChange < 0 || e.openings.length > 0)
 
   const handleExport = () => {
-    const data = exportSession()
-    const blob = new Blob([data], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `conflict-resolver-${new Date().toISOString().split('T')[0]}.json`
-    a.click()
-    URL.revokeObjectURL(url)
+    try {
+      const data = exportSession()
+      const blob = new Blob([data], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `conflict-resolver-${new Date().toISOString().split('T')[0]}.json`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Export failed:', error)
+      alert('Errore durante l\'esportazione. Riprova.')
+    }
   }
 
   return (
